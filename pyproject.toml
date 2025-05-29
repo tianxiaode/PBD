@@ -1,0 +1,49 @@
+[tool.uv.workspace]
+members = [
+  "framework/*",      # 框架包
+  "modules/*",      # 所有模块包
+  "examples",       # 示例项目
+]
+
+[project]
+name = "pbd"
+version = "0.1.0"
+description = "python领域驱动框架"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+  { name = "tianxiaode", email = "huangdengqiao@extjs.tech" },
+]
+
+[project.urls]
+Homepage = "https://github.com/tianxiaode/pbd"
+Documentation = "https://github.com/tianxiaode/pbd#readme"
+Source = "https://github.com/tianxiaode/pbd"
+Issues = "https://github.com/tianxiaode/pbd/issues"
+
+[dependency-groups]
+dev = [
+    "logging-utilities>=5.0.0",
+    "pytest>=8.3.5",
+    "pytest-cov>=6.1.1",
+    "rich>=14.0.0",
+]
+
+[tool.uv.sources]
+pbd_core = { workspace = true }
+# pbd_di = { workspace = true }
+# pbd_guids = { workspace = true }
+# pbd_localization = { workspace = true }
+# pbd_settings = { workspace = true }
+
+
+[tool.pytest.ini_options]
+addopts = [
+    "--verbose",
+    "-s",
+    "--cov=framework",  
+    "--cov-report=term-missing"
+]
+
+[tool.poetry]  # 或 [project] 根据使用的工具链
+version = "0.1.0"  # 统一版本号
