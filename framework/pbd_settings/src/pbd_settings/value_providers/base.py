@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Any, ClassVar
 from pbd_di import ITransientDependency
-from pbd_logging import HasLogger
 from ..generic import SettingDefinition
 
-class SettingValueProviderBase(ITransientDependency, HasLogger, ABC):
+class SettingValueProviderBase(ITransientDependency, ABC):
     """配置值提供者接口"""
 
     _name: ClassVar[str]

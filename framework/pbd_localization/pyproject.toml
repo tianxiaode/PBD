@@ -1,17 +1,27 @@
 [project]
 name = "pbd-localization"
 version = "0.1.0"
-description = "Add your description here"
+description = "PBD本地化模块"
 readme = "README.md"
 authors = [
     { name = "tianxiaode", email = "huangdengqiao@extjs.tech" }
 ]
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "pbd-core",
+    "pbd-di"
+]
 
-[project.scripts]
-pbd-localization = "pbd_localization:main"
+
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pbd_localization"]
+
+[tool.uv.sources]
+pbd-core = { workspace = true }
+pbd-di = { workspace = true }
+

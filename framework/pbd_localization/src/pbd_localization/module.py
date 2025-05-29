@@ -5,3 +5,4 @@ from .default_localizer import DefaultLocalizer
 
 class LocalizationModule(PbdModuleBase):
     pass
+

@@ -1,6 +1,6 @@
 
 from abc import ABC, abstractmethod
-from typing import ClassVar, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 from pbd_di import ITransientDependency,InterfaceBase
 from .generic import CultureInfo
 

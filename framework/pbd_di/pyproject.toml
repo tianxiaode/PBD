@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "pbd_core"
+    "pbd-core"
 ]
 
 
@@ -18,3 +18,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pbd_di"]
+
+[tool.uv.sources]
+pbd-core = { workspace = true }
+pbd-di = { workspace = true }

@@ -207,20 +207,44 @@ version = "0.1.0"
 source = { editable = "framework/pbd_guids" }
 dependencies = [
     { name = "pbd-core" },
+    { name = "pbd-di" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pbd-core", editable = "framework/pbd_core" }]
+requires-dist = [
+    { name = "pbd-core", editable = "framework/pbd_core" },
+    { name = "pbd-di", editable = "framework/pbd_di" },
+]
 
 [[package]]
 name = "pbd-localization"
 version = "0.1.0"
 source = { editable = "framework/pbd_localization" }
+dependencies = [
+    { name = "pbd-core" },
+    { name = "pbd-di" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pbd-core", editable = "framework/pbd_core" },
+    { name = "pbd-di", editable = "framework/pbd_di" },
+]
 
 [[package]]
 name = "pbd-settings"
 version = "0.1.0"
 source = { editable = "framework/pbd_settings" }
+dependencies = [
+    { name = "pbd-core" },
+    { name = "pbd-di" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pbd-core", editable = "framework/pbd_core" },
+    { name = "pbd-di", editable = "framework/pbd_di" },
+]
 
 [[package]]
 name = "pluggy"

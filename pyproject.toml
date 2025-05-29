@@ -29,13 +29,6 @@ dev = [
     "rich>=14.0.0",
 ]
 
-[tool.uv.sources]
-pbd_core = { workspace = true }
-pbd_di = { workspace = true }
-pbd_guids = { workspace = true }
-pbd_localization = { workspace = true }
-pbd_settings = { workspace = true }
-
 
 [tool.pytest.ini_options]
 addopts = [
