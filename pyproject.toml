@@ -31,8 +31,8 @@ dev = [
 
 [tool.uv.sources]
 pbd_core = { workspace = true }
-# pbd_di = { workspace = true }
-# pbd_guids = { workspace = true }
+pbd_di = { workspace = true }
+pbd_guids = { workspace = true }
 # pbd_localization = { workspace = true }
 # pbd_settings = { workspace = true }
 

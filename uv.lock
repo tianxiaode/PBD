@@ -6,6 +6,10 @@ requires-python = ">=3.11"
 members = [
     "pbd",
     "pbd-core",
+    "pbd-di",
+    "pbd-guids",
+    "pbd-localization",
+    "pbd-settings",
 ]
 
 [[package]]
@@ -185,6 +189,38 @@ requires-dist = [
     { name = "rich", marker = "extra == 'rich-logging'", specifier = ">=14.0.0" },
 ]
 provides-extras = ["logging-utils", "rich", "rich-logging"]
+
+[[package]]
+name = "pbd-di"
+version = "0.1.0"
+source = { editable = "framework/pbd_di" }
+dependencies = [
+    { name = "pbd-core" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pbd-core", editable = "framework/pbd_core" }]
+
+[[package]]
+name = "pbd-guids"
+version = "0.1.0"
+source = { editable = "framework/pbd_guids" }
+dependencies = [
+    { name = "pbd-core" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pbd-core", editable = "framework/pbd_core" }]
+
+[[package]]
+name = "pbd-localization"
+version = "0.1.0"
+source = { editable = "framework/pbd_localization" }
+
+[[package]]
+name = "pbd-settings"
+version = "0.1.0"
+source = { editable = "framework/pbd_settings" }
 
 [[package]]
 name = "pluggy"

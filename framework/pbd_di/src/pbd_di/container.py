@@ -1,0 +1,128 @@
+import threading
+import inspect
+from typing import Dict, Any, Type
+from contextvars import ContextVar
+from contextlib import asynccontextmanager
+from .generic import SINGLETON, TRANSIENT, SCOPED
+from pbd_core import HasLogger
+
+_scoped_context = ContextVar("scoped_context", default={})
+_creating_instances_ctx: ContextVar[set] = ContextVar("_creating_instances_ctx")
+def get_creating_instances() -> set:
+    try:
+        return _creating_instances_ctx.get()
+    except LookupError:
+        s = set()
+        _creating_instances_ctx.set(s)
+        return s
+
+
+@asynccontextmanager
+async def scoped_context():
+    token = _scoped_context.set({})
+    try:
+        yield
+    finally:
+        instances = _scoped_context.get()
+        for inst in instances.values():
+            close = getattr(inst, "close", None)
+            if callable(close):
+                result = close()
+                if inspect.isawaitable(result):
+                    await result
+        _scoped_context.reset(token)
+
+class Container(HasLogger):
+    """
+    依赖注入容器。
+    """
+    _intances = None  # 类属性，全局实例
+    _singletons: Dict[str, Any] = {}      # 类属性，全局单例存储
+    _threading_lock = threading.RLock()  # 类级别锁，确保多个方法共享
+    _creating_lock = threading.RLock()  # 专用于循环依赖检测
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._intances:
+            cls._intances = super().__new__(cls)
+            return cls._intances
+        return cls._intances
+
+    async def get(self, target: Type) -> Any:
+        """
+        从容器中获取一个依赖实例。
+        """
+        creating_instances = get_creating_instances()
+
+        if hasattr(target, "__di_implementation__") and target.__di_implementation__ is not None:
+            return await self.get(target.__di_implementation__)
+
+        name = f"{target.__module__}.{target.__qualname__}"
+
+        if name in creating_instances:
+            raise ValueError(f"检测到循环依赖: {name}")
+
+        new_creating_instances = creating_instances.copy()
+        new_creating_instances.add(name)
+        token = _creating_instances_ctx.set(new_creating_instances)
+
+        try:
+            scope = target._di_scope
+            if scope == SINGLETON:
+                with self._threading_lock:
+                    if name not in self._singletons:
+                        self._singletons[name] = await self._create_instance(target)
+                    return self._singletons[name]
+            elif scope == SCOPED:
+                scoped_objects = _scoped_context.get()
+                if name not in scoped_objects:
+                    scoped_objects[name] = await self._create_instance(target)
+                    _scoped_context.set(scoped_objects)
+                return scoped_objects[name]
+            elif scope == TRANSIENT:
+                return await self._create_instance(target)
+            else:
+                raise ValueError(f"不支持的 scope 类型: {scope}")
+        finally:
+            _creating_instances_ctx.reset(token)
+        
+    async def _create_instance(self, target: Type) -> Any:
+        """
+        基于注册表条目创建实例，实现全配置驱动的依赖注入。
+
+        Args:
+            name:  原始的依赖名称 (可能是 str 或 Type)。
+            class_name: 依赖的完整类路径字符串。
+            dependency_type: 依赖的注册信息。
+
+        Returns:
+            创建的依赖实例。
+        """
+        deps = target.deps or {}
+        self.logger.debug(f"创建实例: {target.__name__}({deps})")
+        ctor_args = {}
+        for name, dep in deps.items():
+            ctor_args[name] = await self.get(dep)
+        # 3. 实例化对象
+        instance = target(**ctor_args)
+
+        # 4. 调用异步初始化方法 (如果存在)
+        if hasattr(instance, "initialize") and callable(instance.initialize):
+            if inspect.iscoroutinefunction(instance.initialize):
+                await instance.initialize()
+            else:
+                instance.initialize()
+
+        return instance
+    
+    async def shutdown(self):
+        """清理所有单例资源"""
+        for name, instance in list(self._singletons.items()):
+            if hasattr(instance, "close") and callable(instance.close):
+                if inspect.iscoroutinefunction(instance.close):  # 判断是否是异步方法
+                    await instance.close()  # 异步调用
+                else:
+                    instance.close()  # 同步调用            
+            del self._singletons[name]
+            self.logger.debug(f"已清理单例: {name}")
+
+
