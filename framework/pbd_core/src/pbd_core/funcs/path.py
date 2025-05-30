@@ -1,13 +1,14 @@
 import os
+from pathlib import Path
+import sys
 import tomllib
 
-def find_project_root(start_path="."):
-    current = os.path.abspath(start_path)
-    while current != os.path.dirname(current):
-        if os.path.exists(os.path.join(current, "pyproject.toml")):
-            return current
-        current = os.path.dirname(current)
-    raise FileNotFoundError("No pyproject.toml found")
+
+def find_project_root():
+    main_mod = sys.modules.get('__main__')
+    if hasattr(main_mod, '__file__'):
+        return Path(main_mod.__file__).parent.resolve()
+    return Path.cwd()
 
 def detect_source_dirs():
     root = find_project_root()

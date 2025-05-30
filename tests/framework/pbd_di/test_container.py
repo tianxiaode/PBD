@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
-from pbd_di import Container, SINGLETON, scoped_context, ISingletonDependency, IScopedDependency, ITransientDependency
+from pbd_di import Container, SINGLETON, TRANSIENT,scoped_context, ISingletonDependency, IScopedDependency, ITransientDependency
 
 
 class ContainerTestCase(unittest.IsolatedAsyncioTestCase):
@@ -29,13 +29,13 @@ class ContainerTestCase(unittest.IsolatedAsyncioTestCase):
         
         # 使用side_effect而不是return_value
         with patch.object(container, '_create_instance', AsyncMock(side_effect=[service1, service2])):
-            async with scoped_context():
+            async with container._scoped_context.scope():
                 instance1 = await container.get(MockScopedService)
                 instance2 = await container.get(MockScopedService)
                 self.assertEqual(instance1, instance2)  # 同一作用域内相同
                 container._create_instance.assert_called_once()  # 只创建一次
                 
-            async with scoped_context():
+            async with container._scoped_context.scope():
                 instance3 = await container.get(MockScopedService)
                 self.assertNotEqual(instance1, instance3)  # 不同作用域应该不同
                 self.assertEqual(container._create_instance.call_count, 2)  # 应该创建了两次
@@ -117,10 +117,51 @@ class ContainerTestCase(unittest.IsolatedAsyncioTestCase):
         MockScopedService.close = AsyncMock()
         service1 = await container.get(MockSingletonService1)
         service2 = await container.get(MockSingletonService2)
-        async with scoped_context():
+        async with container._scoped_context.scope():
             scope_service =await container.get(MockScopedService)
         await container.shutdown()
 
         service1.close.assert_awaited_once()
         service2.close.assert_called_once()
         scope_service.close.assert_awaited_once()
+
+    async def test_get_with_context_instances(self):
+        container = self.container
+
+        MockService1 = type('MockService1', (ITransientDependency,),{})
+        MockService2 = type('MockService2', (ITransientDependency,),{})
+        
+        # 创建主服务类，它有2个依赖
+        class MainService(ITransientDependency):
+            _deps = [MockService1, MockService2]
+            
+        
+        service1_name = MockService1._get_default_dependency_name(MockService1)
+        service1 = MockService1()
+        
+        # 使用patch模拟Dep2Service的创建
+        original_create_instance = container._create_instance
+
+        call_count = 0  # 用于追踪调用次数
+
+        context_instances  = {service1_name: service1}
+
+        async def custom_side_effect(cls, *args, **kwargs):
+            nonlocal call_count
+            return await original_create_instance(cls, *args, **kwargs)
+
+        with patch.object(container, '_create_instance', new=AsyncMock(side_effect=custom_side_effect)) as mock_create:
+            # 调用get方法并传入context_instances
+            instance = await container.get(
+                MainService,
+                context_instances=context_instances
+            )
+            
+            self.assertEqual(mock_create.call_count, 2) 
+            
+            # 验证实例创建正确
+            self.assertIsInstance(instance, MainService)
+            self.assertIs(instance.get_dependency(MockService1), service1)  # 来自context_instances
+            self.assertIsInstance(instance.get_dependency(MockService2), MockService2)  # 来自容器解析
+            
+

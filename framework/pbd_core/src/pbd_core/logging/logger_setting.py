@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 class LoggerSetting(BaseModel):
-    env: str = Field(default="development", json_schema_extra={"env": "ENVIRONMENT"})
+    env: str = Field(default="development", json_schema_extra={"env": "APP_ENV"})
     level: str = Field(default="INFO", json_schema_extra={"env": "LOG_LEVEL"})
     format: str = Field(default="%(asctime)s %(levelname)s %(name)s %(message)s", json_schema_extra={"env": "LOG_FORMAT"})
     date_format: str = Field(default="%Y-%m-%d %H:%M:%S", json_schema_extra={"env": "LOG_DATE_FORMAT"})

@@ -1,3 +1,4 @@
+from pathlib import Path
 import unittest
 import os
 import shutil
@@ -31,33 +32,43 @@ class TestPathUtils(unittest.TestCase):
         # 清理测试目录
         shutil.rmtree(self.test_dir, ignore_errors=True)
     
-    def test_find_project_root_success(self):
-        # 创建pyproject.toml
-        with open(os.path.join(self.test_dir, "pyproject.toml"), "w") as f:
-            f.write(self.pyproject_content)
-        
-        # 测试能找到项目根目录
-        result = find_project_root(os.path.join(self.test_dir, "src", "backend"))
-        self.assertEqual(result, self.test_dir)
-    
-    @patch('os.path.exists')
-    @patch('os.path.dirname')
-    def test_find_project_root_failure(self, mock_dirname, mock_exists):
-        # 模拟所有路径都不存在 pyproject.toml
-        mock_exists.return_value = False
-        
-        # 动态生成目录层级关系
-        def dirname_side_effect(path):
-            parts = path.replace('\\', '/').rstrip('/').split('/')
-            if len(parts) <= 1:  # 根目录返回自身
-                return path
-            return '/'.join(parts[:-1]) or '/'
-        
-        mock_dirname.side_effect = dirname_side_effect
-        
-        with self.assertRaises(FileNotFoundError):
-            find_project_root('D:/a/b/c')  # 使用正斜杠保持跨平台兼容
+    def test_find_project_root(self):
+        """测试所有可能的sys.modules情况"""
+        test_cases = [
+            # 情况1: 正常有__main__模块且有__file__
+            {
+                "name": "with_main_module",
+                "mock_modules": {"__main__": type("", (), {"__file__": str(Path(self.test_dir)/"main.py")})},
+                "expected": Path(self.test_dir).resolve()
+            },
+            # 情况2: 有__main__模块但无__file__
+            {
+                "name": "main_module_no_file", 
+                "mock_modules": {"__main__": object()},  # 普通object没有__file__
+                "expected": Path.cwd().resolve()
+            },
+            # 情况3: 无__main__模块
+            {
+                "name": "no_main_module",
+                "mock_modules": {},
+                "expected": Path.cwd().resolve() 
+            },
+            # 情况4: __main__模块为None
+            {
+                "name": "main_module_is_none",
+                "mock_modules": {"__main__": None},
+                "expected": Path.cwd().resolve()
+            }
+        ]
 
+        for case in test_cases:
+            with self.subTest(case["name"]):
+                with patch('sys.modules', case["mock_modules"]):
+                    with patch('pathlib.Path.cwd', return_value=Path(self.test_dir)):
+                        result = find_project_root()
+                        self.assertEqual(result, case["expected"])
+
+   
 
     def test_detect_source_dirs_with_hatch_config(self):
         # 创建pyproject.toml

@@ -1,7 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar, Optional
+from typing import Any, Optional
+from pbd_di import ITransientDependency
+from .interfaces import ISettingValueProviderManager
 
-class SettingProvider(ABC):
+class SettingProvider(ITransientDependency,ABC):
+
+    _deps = [ISettingValueProviderManager]
+
     @abstractmethod
     async def get(self, key: str) -> Optional[Any]:
         raise NotImplementedError

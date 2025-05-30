@@ -1,4 +1,8 @@
-from .generic import SettingDefinition
-from .group import SettingGroup
+from .schema import SettingSchema, SettingDefinition, SettingGroup
 
-__all__ = ["SettingDefinition", "SettingGroup"]
+__all__ = [
+    #schema
+    "SettingSchema",
+    "SettingDefinition",
+    "SettingGroup",
+]

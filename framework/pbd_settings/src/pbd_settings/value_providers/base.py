@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, ClassVar
 from pbd_di import ITransientDependency
-from ..generic import SettingDefinition
+from ..schema import SettingDefinition
 
 class SettingValueProviderBase(ITransientDependency, ABC):
     """配置值提供者接口"""
