@@ -8,6 +8,7 @@ members = [
     "pbd-core",
     "pbd-di",
     "pbd-guids",
+    "pbd-http",
     "pbd-localization",
     "pbd-settings",
 ]
@@ -215,6 +216,11 @@ requires-dist = [
     { name = "pbd-core", editable = "framework/pbd_core" },
     { name = "pbd-di", editable = "framework/pbd_di" },
 ]
+
+[[package]]
+name = "pbd-http"
+version = "0.1.0"
+source = { editable = "framework/pbd_http" }
 
 [[package]]
 name = "pbd-localization"

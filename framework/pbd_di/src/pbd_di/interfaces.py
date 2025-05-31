@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar, Type
+from typing import Any, Type
 from pbd_core import HasLogger
 from .generic import TDependency, SINGLETON, TRANSIENT, SCOPED
 
@@ -22,7 +22,7 @@ class InterfaceBase:
                 break
 
     @classmethod
-    def is_interface(cls):
+    def is_interface(cls) ->bool:
         # 只把“直接继承 InterfaceBase”的类视为接口
         return InterfaceBase in cls.__bases__
     
