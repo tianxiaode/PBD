@@ -3,7 +3,7 @@ from .funcs import replace_service
 from .generic import SINGLETON, TRANSIENT, SCOPED, VALID_SCOPES, TDependency
 from .interfaces import IDependencyBase, ISingletonDependency, ITransientDependency, IScopedDependency, IServiceProvider, InterfaceBase
 from .service_provider import ServiceProvider
-from .decorators import extend_class 
+from .decorators import injectable_extension 
 
 __all__ = [
     # container
@@ -24,6 +24,6 @@ __all__ = [
     "ServiceProvider",
 
     # decorators
-    "extend_class"
+    "injectable_extension"
     
 ]
