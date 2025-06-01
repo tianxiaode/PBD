@@ -3,7 +3,7 @@ from .funcs import is_empty, camel_to_snake, safe_truncate_utf8, find_project_ro
 from .modularity import PbdModuleBase, ModuleManager, ModuleLoadError
 from .exceptions import PbdException
 from .logging import Logger, HasLogger, LoggerSetting
-from .extendable import Extendable
+from .decorators import extend_class
 
 __all__ = [
     # singleton
@@ -29,7 +29,7 @@ __all__ = [
     #logging
     'Logger', 'HasLogger', 'LoggerSetting',
 
-    # extendable
-    'Extendable'
+    # decorators
+    'extend_class'
 
 ]
