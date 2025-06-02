@@ -97,21 +97,170 @@ class TestPathHelper(unittest.TestCase):
         # 测试空参数
         self.assertEqual(PathHelper.from_src(), self.root_path / "src")
     
-    def test_norm_path(self):
+    def test_normalize(self):
         """测试路径规范化"""
         # 测试相对路径
         rel_path = "dir/../file.txt"
-        abs_path = PathHelper.norm_path(rel_path)
+        abs_path = PathHelper.normalize(rel_path)
         self.assertEqual(abs_path, str(Path(rel_path).resolve()))
         
         # 测试绝对路径
         abs_input = str(self.root_path / "dir" / "file.txt")
-        self.assertEqual(PathHelper.norm_path(abs_input), abs_input)
+        self.assertEqual(PathHelper.normalize(abs_input), abs_input)
         
         # 测试跨平台路径
         win_path = "dir\\subdir\\file.txt"
-        norm_path = PathHelper.norm_path(win_path)
+        norm_path = PathHelper.normalize(win_path)
         self.assertEqual(norm_path, str(Path(win_path).resolve()))
+
+    def test_exist(self):
+        """测试is_exist方法"""
+        test_dir = self.root_path / "test_dir"
+        
+        # 测试目录不存在且不创建
+        self.assertFalse(PathHelper.exist(test_dir))
+        
+        # 测试目录不存在但要求创建
+        self.assertTrue(PathHelper.exist(test_dir, auto_create=True))
+        self.assertTrue(test_dir.exists())
+        
+        # 测试目录已存在
+        self.assertTrue(PathHelper.exist(test_dir))
+        
+        # 测试路径是文件不是目录
+        test_file = self.root_path / "test_file.txt"
+        test_file.touch()
+        with self.assertRaises(ValueError):
+            PathHelper.exist(test_file)
+        
+        # 测试创建多级目录
+        nested_dir = test_dir / "subdir" / "nested"
+        self.assertTrue(PathHelper.exist(nested_dir, auto_create=True))
+        self.assertTrue(nested_dir.exists())
+        
+        # 测试创建目录失败（无权限）
+        if os.name == 'posix':  # Unix-like系统
+            protected_dir = "/root/test_dir"
+            with self.assertRaises(OSError):
+                PathHelper.exist(protected_dir, auto_create=True)
+
+    def test_exist_exceptions(self):
+        """测试is_exist方法的异常抛出"""
+        # 测试路径存在但不是目录的情况
+        test_file = self.root_path / "test_file.txt"
+        test_file.touch()
+        
+        with self.assertRaises(ValueError) as cm:
+            PathHelper.exist(test_file)
+        self.assertIn("不是目录", str(cm.exception))
+        
+        # 测试创建目录时的权限错误
+        if os.name == 'posix':
+            with tempfile.NamedTemporaryFile() as temp_file:
+                # 尝试在文件路径下创建目录（应该失败）
+                with self.assertRaises(OSError) as cm:
+                    PathHelper.exist(Path(temp_file.name) / "subdir", auto_create=True)
+                self.assertIn("无法创建目录", str(cm.exception))
+
+    def test_is_exist_create_failure(self):
+        """测试is_exist方法在创建目录时的异常情况"""
+        test_dir = self.root_path / "new_dir"
+        
+        # 使用mock模拟mkdir抛出OSError
+        with patch.object(Path, 'mkdir', side_effect=OSError("模拟创建目录失败")):
+            with self.assertRaises(OSError) as cm:
+                PathHelper.exist(test_dir, auto_create=True)
+            
+            # 验证异常消息格式是否正确
+            self.assertIn("无法创建目录", str(cm.exception))
+            self.assertIn("模拟创建目录失败", str(cm.exception))                
+
+    def test_delete(self):
+        """测试delete方法"""
+        # 测试文件删除
+        test_file = self.root_path / "test_file.txt"
+        test_file.touch()
+        PathHelper.delete(test_file)
+        self.assertFalse(test_file.exists())
+        
+        # 测试空目录删除
+        empty_dir = self.root_path / "empty_dir"
+        empty_dir.mkdir()
+        PathHelper.delete(empty_dir, recursive=False)
+        self.assertFalse(empty_dir.exists())
+        
+        # 测试递归目录删除
+        nested_dir = self.root_path / "nested"
+        (nested_dir / "subdir").mkdir(parents=True)
+        (nested_dir / "file.txt").touch()
+        PathHelper.delete(nested_dir)
+        self.assertFalse(nested_dir.exists())
+        
+        # 测试不存在的路径（应该静默返回）
+        PathHelper.delete("/nonexistent/path")
+        
+        # 测试符号链接删除
+        if os.name != 'nt':  # Windows符号链接需要特殊权限
+            link_path = self.root_path / "link"
+            target_path = self.root_path / "target"
+            target_path.mkdir()
+            os.symlink(target_path, link_path)
+            PathHelper.delete(link_path)
+            self.assertFalse(link_path.exists())
+            self.assertTrue(target_path.exists())  # 只删除链接不删除目标
+
+        # 测试权限错误（更精确的测试）
+        if os.name == 'posix':
+            protected_file = "/root/test_file"
+            try:
+                # 先尝试创建测试文件（可能需要sudo）
+                Path(protected_file).touch(mode=0o400, exist_ok=True)
+                with self.assertRaises(OSError) as cm:
+                    PathHelper.delete(protected_file)
+                self.assertIn("删除失败", str(cm.exception))
+            finally:
+                # 清理测试文件
+                Path(protected_file).unlink(missing_ok=True)
+
+
+
+    def test_delete_exceptions(self):
+        """测试delete方法的异常抛出（使用模拟）"""
+        # 测试文件删除失败
+        test_file = self.root_path / "test_file.txt"
+        test_file.touch()
+        
+        # 模拟unlink抛出异常
+        with patch.object(Path, 'unlink', side_effect=OSError("模拟删除失败")):
+            with self.assertRaises(OSError) as cm:
+                PathHelper.delete(test_file)
+            self.assertIn("模拟删除失败", str(cm.exception))
+        
+        # 测试目录删除失败
+        test_dir = self.root_path / "test_dir"
+        test_dir.mkdir()
+        
+        # 模拟rmdir抛出异常
+        with patch.object(Path, 'rmdir', side_effect=OSError("模拟目录删除失败")):
+            with self.assertRaises(OSError) as cm:
+                PathHelper.delete(test_dir)
+            self.assertIn("模拟目录删除失败", str(cm.exception))
+        
+        # 测试递归删除时子文件删除失败
+        nested_dir = self.root_path / "nested"
+        nested_file = nested_dir / "file.txt"
+        nested_dir.mkdir()
+        nested_file.touch()
+        
+        # 模拟iterdir返回包含文件的列表
+        with patch.object(Path, 'iterdir', return_value=[nested_file]):
+            # 模拟unlink抛出异常
+            with patch.object(Path, 'unlink', side_effect=OSError("模拟子文件删除失败")):
+                with self.assertRaises(OSError) as cm:
+                    PathHelper.delete(nested_dir)
+                self.assertIn("模拟子文件删除失败", str(cm.exception))
+
+
     
     def test_singleton(self):
         """测试单例模式"""
