@@ -1,16 +1,16 @@
 import unittest
 from unittest.mock import MagicMock
-from pbd_di import IDependencyBase, ISingletonDependency, ITransientDependency, IScopedDependency,InterfaceBase, IServiceProvider
+from pbd_di import IDependencyBase, ISingletonDependency, ITransientDependency, IScopedDependency,IReplaceableInterface, IServiceProvider
 
-class TestInterfaceBase(unittest.TestCase):
+class TestIReplaceableInterface(unittest.TestCase):
     def test_is_interface_direct_inheritance(self):
-        class BaseInterface(InterfaceBase):
+        class BaseInterface(IReplaceableInterface):
             pass
 
         self.assertTrue(BaseInterface.is_interface())
 
     def test_is_interface_not_direct_inheritance(self):
-        class BaseInterface(InterfaceBase):
+        class BaseInterface(IReplaceableInterface):
             pass
 
         class DerivedInterface(BaseInterface):
@@ -19,7 +19,7 @@ class TestInterfaceBase(unittest.TestCase):
         self.assertFalse(DerivedInterface.is_interface())
 
     def test_registers_implementation_in_non_interface(self):
-        class BaseInterface(InterfaceBase):
+        class BaseInterface(IReplaceableInterface):
             pass
 
         class DerivedClass(BaseInterface):
@@ -32,13 +32,13 @@ class TestInterfaceBase(unittest.TestCase):
         class IRepository:
             pass
 
-        class IUserRepository(IRepository, InterfaceBase):
+        class IUserRepository(IRepository, IReplaceableInterface):
             pass    
 
         class UserRepository(IUserRepository):
             pass
         
-        self.assertFalse(hasattr(InterfaceBase, '__di_implementation__'))
+        self.assertFalse(hasattr(IReplaceableInterface, '__di_implementation__'))
         self.assertFalse(hasattr(IRepository, '__di_implementation__'))
         self.assertTrue(hasattr(IUserRepository, '__di_implementation__'))
         self.assertEqual(IUserRepository.__di_implementation__, UserRepository)

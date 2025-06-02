@@ -3,12 +3,12 @@ from typing import Any, Type
 from pbd_core import HasLogger
 from .generic import TDependency, SINGLETON, TRANSIENT, SCOPED
 
-class InterfaceBase:
+class IReplaceableInterface:
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
 
-        # 跳过 InterfaceBase 自己
-        if cls is InterfaceBase:
+        # 跳过 IReplaceableInterface 自己
+        if cls is IReplaceableInterface:
             return
 
         # 这个类是接口，什么都不做
@@ -23,8 +23,8 @@ class InterfaceBase:
 
     @classmethod
     def is_interface(cls) ->bool:
-        # 只把“直接继承 InterfaceBase”的类视为接口
-        return InterfaceBase in cls.__bases__
+        # 只把“直接继承 IReplaceableInterface”的类视为接口
+        return IReplaceableInterface in cls.__bases__
     
 
 class IDependencyBase(HasLogger):
@@ -73,7 +73,7 @@ class ITransientDependency(IDependencyBase):
 class IScopedDependency(IDependencyBase):
     _di_scope = SCOPED
 
-class IServiceProvider(ITransientDependency,InterfaceBase, ABC):
+class IServiceProvider(ITransientDependency,IReplaceableInterface, ABC):
     """服务提供者接口 (类似 .NET 的 IServiceProvider)"""
 
     @abstractmethod

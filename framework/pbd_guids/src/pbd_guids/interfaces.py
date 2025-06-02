@@ -1,9 +1,9 @@
 from abc import abstractmethod
 from uuid import UUID
-from pbd_di import ISingletonDependency, InterfaceBase
+from pbd_di import ISingletonDependency, IReplaceableInterface
 
 
-class IGuidGenerator(ISingletonDependency, InterfaceBase):
+class IGuidGenerator(ISingletonDependency, IReplaceableInterface):
 
     """GUID生成器接口
 

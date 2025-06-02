@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional
-from pbd_di import ISingletonDependency, InterfaceBase,ITransientDependency
+from pbd_di import ISingletonDependency, IReplaceableInterface,ITransientDependency
 from .value_providers import SettingValueProviderBase
 from .schema import SettingDefinition
 
@@ -16,14 +16,14 @@ class ISettingStoreBase(ABC):
         """获取多个设置值"""
         raise NotImplementedError()
     
-class IJsonSettingStore(ISettingStoreBase, ISingletonDependency, InterfaceBase):
+class IJsonSettingStore(ISettingStoreBase, ISingletonDependency, IReplaceableInterface):
     pass
 
-class ISettingStore(ISettingStoreBase, ITransientDependency, InterfaceBase):
+class ISettingStore(ISettingStoreBase, ITransientDependency, IReplaceableInterface):
     pass
 
 
-class ISettingValueProviderManager(ISingletonDependency, InterfaceBase, ABC):
+class ISettingValueProviderManager(ISingletonDependency, IReplaceableInterface, ABC):
 
 
     @property

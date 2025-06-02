@@ -1,10 +1,10 @@
 
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Union
-from pbd_di import ITransientDependency,InterfaceBase
+from pbd_di import ITransientDependency,IReplaceableInterface
 from .generic import CultureInfo
 
-class ICultureStore(ITransientDependency, InterfaceBase, ABC):
+class ICultureStore(ITransientDependency, IReplaceableInterface, ABC):
     """文化配置存储抽象接口"""
     @abstractmethod
     def get_all(self) -> Dict[str, 'CultureInfo']:
@@ -36,7 +36,7 @@ class ICultureStore(ITransientDependency, InterfaceBase, ABC):
 
 
 
-class ILocalizer(ITransientDependency,InterfaceBase,ABC):
+class ILocalizer(ITransientDependency,IReplaceableInterface,ABC):
 
     def set_current_lang(self, lang: str) -> None:
         """设置当前语言"""
