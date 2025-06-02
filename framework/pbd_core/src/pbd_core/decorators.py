@@ -11,13 +11,26 @@ def extend_class(target_cls):
                 # 增强原有方法
                 ...
     """
+    # 需要跳过的关键魔术方法
+    SKIP_METHODS = {'__init__', '__new__', '__del__'}
+    # 需要跳过的特殊属性
+    SKIP_ATTRIBUTES = {'__dict__', '__class__', '__slots__', '__weakref__', '__module__'}
+
     def decorator(extension_cls):
         for name, attr in extension_cls.__dict__.items():
-            # 跳过魔术方法 (__init__等) 但保留自定义方法 (如 __custom__)
-            if name.startswith('__') and name.endswith('__') and name not in extension_cls.__dict__:
+            # 跳过名称重整属性 (如 __private)
+            if name.startswith(f'_{extension_cls.__name__}__'):
                 continue
                 
-            # 处理方法和函数
+            # 跳过关键魔术方法
+            if name in SKIP_METHODS:
+                continue
+                
+            # 跳过特殊属性
+            if name in SKIP_ATTRIBUTES:
+                continue
+                
+            # 处理可调用对象（方法）
             if callable(attr):
                 # 创建闭包捕获当前attr值
                 def make_wrapper(wrapped_func):
@@ -35,8 +48,8 @@ def extend_class(target_cls):
                 # 绑定新方法
                 setattr(target_cls, name, wrapper_func)
             
-            # 处理属性（排除模块级属性）
-            elif not name.startswith('__') or not hasattr(extension_cls, '__module__'):
+            # 处理非可调用属性
+            else:
                 setattr(target_cls, name, attr)
         
         return extension_cls

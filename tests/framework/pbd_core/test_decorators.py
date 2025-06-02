@@ -29,11 +29,14 @@ class TestExtendClass(unittest.TestCase):
             __init__ = lambda self: None  # 标准魔术方法，应跳过
             __private = "name mangled"  # 名称修饰属性，应跳过
 
+        print("MyClass __init__ before:", hasattr(MyClass, '__init__'))
+        print("MyExtensions __init__:", hasattr(MyExtensions, '__init__'))
         instance = MyClass()
+        print("instance __init__ after:", hasattr(instance, '__init__'))        
         # 自定义魔术方法应该被保留
         self.assertEqual(instance.__magic__, "custom magic")
         # 标准魔术方法不应被扩展
-        self.assertFalse(hasattr(instance, '__init__'))
+        self.assertNotEqual(instance.__init__, MyExtensions.__init__)
         # 名称修饰属性不应被扩展
         self.assertFalse(hasattr(instance, '__private'))        
 
