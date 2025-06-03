@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from typing import Any, Type
 from pbd_core import HasLogger
 from .generic import TDependency, SINGLETON, TRANSIENT, SCOPED
+from .exceptions import DependencyNotFoundException
+from .funcs import get_default_dependency_name
 
 class IReplaceableInterface:
     def __init_subclass__(cls, **kwargs):
@@ -55,13 +57,13 @@ class IDependencyBase(HasLogger):
 
     @classmethod
     def _get_default_dependency_name(cls, dep_type: type) -> str:
-        return f"{dep_type.__module__}.{dep_type.__qualname__}".lower()
+        return get_default_dependency_name(dep_type)        
 
     def get_dependency(self, dependency_type: Type[TDependency]) -> TDependency:
         name = self._get_default_dependency_name(dependency_type)
-        if hasattr(self, "deps") and name in self.deps:
+        if hasattr(self, name):
             return getattr(self, name)
-        raise ValueError(f"未找到依赖： {dependency_type}")    
+        raise DependencyNotFoundException(dependency_type)
     
     
 class ISingletonDependency(IDependencyBase):

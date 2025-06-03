@@ -12,3 +12,11 @@ def replace_service(source: type, target: type):
         raise TypeError("源服务类型和目标服务类型必须是类型")
     
     setattr(target, '__di_implementation__', source)
+
+def get_default_dependency_name(target: type):
+    """
+    获取默认依赖名称
+    :param target: 服务类型
+    :return: 字符串，默认依赖名称
+    """
+    return f"{target.__module__}.{target.__qualname__}".lower()

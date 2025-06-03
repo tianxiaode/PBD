@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock
-from pbd_di import IDependencyBase, ISingletonDependency, ITransientDependency, IScopedDependency,IReplaceableInterface, IServiceProvider
+from pbd_di import IDependencyBase, ISingletonDependency, ITransientDependency, IScopedDependency,IReplaceableInterface, IServiceProvider, DependencyNotFoundException
 
 class TestIReplaceableInterface(unittest.TestCase):
     def test_is_interface_direct_inheritance(self):
@@ -159,7 +159,7 @@ class TestDependencyBase(unittest.TestCase):
             pass
         
         # 测试获取不存在的依赖
-        with self.assertRaises(ValueError):
+        with self.assertRaises(DependencyNotFoundException):
             instance = TestClass()
             instance.get_dependency(TestDependency)      
 

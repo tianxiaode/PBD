@@ -1,6 +1,9 @@
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
-from pbd_di import Container, SINGLETON, TRANSIENT,scoped_context, ISingletonDependency, IScopedDependency, ITransientDependency
+from pbd_di import (
+    Container, SINGLETON, TRANSIENT,scoped_context, ISingletonDependency, IScopedDependency, ITransientDependency,
+    CircularDependencyException, InvalidScopeException
+)
 
 
 class ContainerTestCase(unittest.IsolatedAsyncioTestCase):
@@ -42,12 +45,13 @@ class ContainerTestCase(unittest.IsolatedAsyncioTestCase):
     
     async def test_invalid_scope(self):
         container = self.container
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(InvalidScopeException) as context:
             class InvalidService:
                 _di_scope = 'invalid'
                 deps = {}
             await container.get(InvalidService)
-        self.assertEqual(str(context.exception), "不支持的 scope 类型: invalid")
+        self.assertEqual(context.exception.code, "app.invalid_scope")
+        self.assertEqual(context.exception.data, {"target": "InvalidService", "scope": "invalid"})
 
 
     async def test_get_transient(self):
@@ -105,9 +109,10 @@ class ContainerTestCase(unittest.IsolatedAsyncioTestCase):
         CircularService1.deps = {'circular_service2': CircularService2}
         CircularService2.deps = {'circular_service1': CircularService1}
         container = self.container
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(CircularDependencyException) as context:
             await container.get(CircularService1)
-        self.assertEqual(str(context.exception), "检测到循环依赖: pbd_di.test_container.CircularService1")
+        self.assertEqual(context.exception.code, "app.circular_dependency")
+        self.assertEqual(context.exception.data, {"name": "pbd_di.test_container.CircularService1"})
 
     async def test_shutdown(self):
         container = self.container
@@ -128,15 +133,14 @@ class ContainerTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_get_with_context_instances(self):
         container = self.container
 
-        MockService1 = type('MockService1', (ITransientDependency,),{})
+        MockService1 = type('MockService1', (ITransientDependency,),{'__module__': 'pbd_di.test_container'})
         MockService2 = type('MockService2', (ITransientDependency,),{})
         
         # 创建主服务类，它有2个依赖
         class MainService(ITransientDependency):
-            _deps = [MockService1, MockService2]
+            _deps = [MockService2]
             
         
-        service1_name = MockService1._get_default_dependency_name(MockService1)
         service1 = MockService1()
         
         # 使用patch模拟Dep2Service的创建
@@ -144,7 +148,7 @@ class ContainerTestCase(unittest.IsolatedAsyncioTestCase):
 
         call_count = 0  # 用于追踪调用次数
 
-        context_instances  = {service1_name: service1}
+        context_instances  = [service1]
 
         async def custom_side_effect(cls, *args, **kwargs):
             nonlocal call_count

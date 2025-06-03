@@ -1,4 +1,6 @@
 from .interfaces import IDependencyBase
+from .exceptions import InjectableExtensionInvalidTypeException
+
 def injectable_extension(target_class, deps=None):
     """
     类扩展装饰器
@@ -10,12 +12,11 @@ def injectable_extension(target_class, deps=None):
     def decorator(extension_module):
         # === 1. 直接添加新依赖到deps字典 ===
         if not  issubclass(target_class, IDependencyBase):
-            raise TypeError(f"{target_class} 类必须是IDependencyBase的子类")
+            raise InjectableExtensionInvalidTypeException(target_class)
         
         if deps:
             # 确保目标类有deps属性
-            if not hasattr(target_class, 'deps'):
-                target_class.deps = {}
+            target_class.deps = {} if not hasattr(target_class, 'deps') else target_class.deps
             
             for dep in deps:
                 name = target_class._get_default_dependency_name(dep)

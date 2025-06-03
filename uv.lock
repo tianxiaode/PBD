@@ -10,6 +10,7 @@ members = [
     "pbd-guids",
     "pbd-http",
     "pbd-localization",
+    "pbd-security",
     "pbd-settings",
 ]
 
@@ -226,6 +227,21 @@ source = { editable = "framework/pbd_http" }
 name = "pbd-localization"
 version = "0.1.0"
 source = { editable = "framework/pbd_localization" }
+dependencies = [
+    { name = "pbd-core" },
+    { name = "pbd-di" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pbd-core", editable = "framework/pbd_core" },
+    { name = "pbd-di", editable = "framework/pbd_di" },
+]
+
+[[package]]
+name = "pbd-security"
+version = "0.1.0"
+source = { editable = "framework/pbd_security" }
 dependencies = [
     { name = "pbd-core" },
     { name = "pbd-di" },

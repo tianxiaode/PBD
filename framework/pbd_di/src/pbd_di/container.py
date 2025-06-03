@@ -1,10 +1,12 @@
 import threading
 import inspect
-from typing import Dict, Any, Optional, Type
+from typing import Dict, Any, List, Optional, Type
 from contextvars import ContextVar
 from .generic import SINGLETON, TRANSIENT, SCOPED
 from pbd_core import HasLogger, SingletonBase
 from .scoped_context import ScopedContext
+from .exceptions import CircularDependencyException, InvalidScopeException
+from .funcs import get_default_dependency_name
 
 _creating_instances_ctx: ContextVar[set] = ContextVar("_creating_instances_ctx")
 def get_creating_instances() -> set:
@@ -29,7 +31,7 @@ class Container(SingletonBase,HasLogger):
         self._scoped_context = ScopedContext()
         self.logger.debug("容器已初始化")
 
-    async def get(self, target: Type, context_instances: Optional[Dict[str, type]] = None) -> Any:
+    async def get(self, target: Type, context_instances: Optional[List[Type]] = None) -> Any:
         """
         从容器中获取一个依赖实例。
         """
@@ -41,7 +43,7 @@ class Container(SingletonBase,HasLogger):
         name = f"{target.__module__}.{target.__qualname__}"
 
         if name in creating_instances:
-            raise ValueError(f"检测到循环依赖: {name}")
+            raise CircularDependencyException(name)
 
         new_creating_instances = creating_instances.copy()
         new_creating_instances.add(name)
@@ -63,11 +65,11 @@ class Container(SingletonBase,HasLogger):
             elif scope == TRANSIENT:
                 return await self._create_instance(target, context_instances)
             else:
-                raise ValueError(f"不支持的 scope 类型: {scope}")
+                raise InvalidScopeException(target, scope)
         finally:
             _creating_instances_ctx.reset(token)
         
-    async def _create_instance(self, target: Type, context_instances: Optional[Dict[str, type]] = None) -> Any:
+    async def _create_instance(self, target: Type, context_instances: Optional[List[Type]] = None) -> Any:
         """
         基于注册表条目创建实例，实现全配置驱动的依赖注入。
 
@@ -82,8 +84,11 @@ class Container(SingletonBase,HasLogger):
         deps = target.deps or {}
         self.logger.debug(f"创建实例: {target.__name__}({deps})")
         ctor_args = {}
+        for instance in context_instances or []:
+            name = get_default_dependency_name(type(instance))
+            ctor_args[name] = instance
         for name, dep in deps.items():
-            ctor_args[name] = (context_instances or {}).get(name, None) or  await self.get(dep, context_instances)
+            ctor_args[name] =  await self.get(dep, context_instances)
         # 3. 实例化对象
         instance = target(**ctor_args)
 
