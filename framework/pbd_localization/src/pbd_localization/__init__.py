@@ -4,6 +4,8 @@ from .localization_resource import LocalizationResource
 from .default_culture import DefaultCulture
 from .default_culture_store import DefaultCultureStore
 from .default_localizer import DefaultLocalizer
+from .extensions import LocalizerExtension
+from .module import LocalizationModule
 
 __all__ = [
     "CultureInfo",
@@ -16,5 +18,7 @@ __all__ = [
     "LocalizationResource",
     "DefaultCulture",
     "DefaultCultureStore",
-    "DefaultLocalizer"
+    "DefaultLocalizer",
+    "LocalizerExtension",
+    "LocalizationModule",
 ]
