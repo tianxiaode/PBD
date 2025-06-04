@@ -31,7 +31,7 @@ class Container(SingletonBase,HasLogger):
         self._scoped_context = ScopedContext()
         self.logger.debug("容器已初始化")
 
-    async def get(self, target: Type, context_instances: Optional[List[Type]] = None) -> Any:
+    async def get(self, target: Type, context_instances: Optional[Dict[str,Type]] = None) -> Any:
         """
         从容器中获取一个依赖实例。
         """
@@ -69,7 +69,7 @@ class Container(SingletonBase,HasLogger):
         finally:
             _creating_instances_ctx.reset(token)
         
-    async def _create_instance(self, target: Type, context_instances: Optional[List[Type]] = None) -> Any:
+    async def _create_instance(self, target: Type, context_instances: Optional[Dict[str,Type]] = None) -> Any:
         """
         基于注册表条目创建实例，实现全配置驱动的依赖注入。
 
@@ -84,9 +84,9 @@ class Container(SingletonBase,HasLogger):
         deps = target.deps or {}
         self.logger.debug(f"创建实例: {target.__name__}({deps})")
         ctor_args = {}
-        for instance in context_instances or []:
-            name = get_default_dependency_name(type(instance))
-            ctor_args[name] = instance
+        if context_instances:
+            for name,instance in context_instances.items():
+                ctor_args[name] = instance
         for name, dep in deps.items():
             ctor_args[name] =  await self.get(dep, context_instances)
         # 3. 实例化对象

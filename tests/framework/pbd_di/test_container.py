@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 from pbd_di import (
     Container, SINGLETON, TRANSIENT,scoped_context, ISingletonDependency, IScopedDependency, ITransientDependency,
-    CircularDependencyException, InvalidScopeException
+    CircularDependencyException, InvalidScopeException, get_default_dependency_name
 )
 
 
@@ -148,7 +148,8 @@ class ContainerTestCase(unittest.IsolatedAsyncioTestCase):
 
         call_count = 0  # 用于追踪调用次数
 
-        context_instances  = [service1]
+        context_instances  = {}
+        context_instances[get_default_dependency_name(MockService1)] = service1
 
         async def custom_side_effect(cls, *args, **kwargs):
             nonlocal call_count
