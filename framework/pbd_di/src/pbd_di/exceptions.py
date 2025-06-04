@@ -1,29 +1,33 @@
-from pbd_core import PbdException
+from pbd_core import InternalException
 
-class CircularDependencyException(PbdException):
+class CircularDependencyException(InternalException):
     
     def __init__(self, name: str):
-        code = 'app.circular_dependency'
+        code = 'Circular dependency exception'
         data = {'name': name}
-        super().__init__(code, code=code, data=data)
+        message = f"检查到循环依赖： {name}"
+        super().__init__(message, code=code, data=data)
 
-class InvalidScopeException(PbdException):
+class InvalidScopeException(InternalException):
 
     def __init__(self, target: type, scope: str):
-        code = 'app.invalid_scope'
+        code = 'Invalid scope exception'
         data = {'target': target.__name__, 'scope': scope}
-        super().__init__(code, code=code, data=data)    
+        message = f"无法解析 {target.__name__} 的作用域 {scope}"
+        super().__init__(message, code=code, data=data)    
 
-class DependencyNotFoundException(PbdException):
-
-    def __init__(self, target: type):
-        code = 'app.dependency_not_found'
-        data = {'target': target.__name__}
-        super().__init__(code, code=code, data=data)
-
-class InjectableExtensionInvalidTypeException(PbdException):
+class DependencyNotFoundException(InternalException):
 
     def __init__(self, target: type):
-        code = 'app.injectable_extension_invalid_type'
+        code = 'Dependency not found exception'
         data = {'target': target.__name__}
-        super().__init__(code, code=code, data=data)
+        message = f"无法解析 {target.__name__} 的依赖"
+        super().__init__(message, code=code, data=data)
+
+class InjectableExtensionInvalidTypeException(InternalException):
+
+    def __init__(self, target: type):
+        code = 'Injectable extension invalid type exception'
+        data = {'target': target.__name__}
+        message = f"Injectable extension {target.__name__} 必须是类"
+        super().__init__(message, code=code, data=data)

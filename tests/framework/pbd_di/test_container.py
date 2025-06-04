@@ -50,9 +50,9 @@ class ContainerTestCase(unittest.IsolatedAsyncioTestCase):
                 _di_scope = 'invalid'
                 deps = {}
             await container.get(InvalidService)
-        self.assertEqual(context.exception.code, "app.invalid_scope")
+        self.assertEqual(context.exception.code, "Invalid scope exception")
         self.assertEqual(context.exception.data, {"target": "InvalidService", "scope": "invalid"})
-
+        self.assertEqual(str(context.exception.message), "无法解析 InvalidService 的作用域 invalid")
 
     async def test_get_transient(self):
         container = self.container
@@ -111,8 +111,9 @@ class ContainerTestCase(unittest.IsolatedAsyncioTestCase):
         container = self.container
         with self.assertRaises(CircularDependencyException) as context:
             await container.get(CircularService1)
-        self.assertEqual(context.exception.code, "app.circular_dependency")
+        self.assertEqual(context.exception.code, "Circular dependency exception")
         self.assertEqual(context.exception.data, {"name": "pbd_di.test_container.CircularService1"})
+        self.assertEqual(str(context.exception.message), "检查到循环依赖： pbd_di.test_container.CircularService1")
 
     async def test_shutdown(self):
         container = self.container
