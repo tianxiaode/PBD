@@ -3,7 +3,7 @@ from .modularity import PbdModuleBase, ModuleManager, ModuleLoadError
 from .exceptions import PbdException, InternalException, BusinessException, SimpleMessageException
 from .logging import Logger, HasLogger, LoggerSetting
 from .decorators import extend_class
-from .helpers import PathHelper, StringHelper
+from .helpers import PathHelper, StringHelper, DictHelper
 
 __all__ = [
     # singleton
@@ -12,6 +12,7 @@ __all__ = [
     # helpers
     'PathHelper',
     'StringHelper',
+    'DictHelper',
 
     # modularity
     'PbdModuleBase',
