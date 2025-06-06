@@ -85,8 +85,20 @@ class LocalizationResource:
     def get(cls, key: str, code: str, default: Any = None) -> Any:
         """获取指定路径的本地化文本"""
 
-        return LocalizationResource._get_texts(code).get(key, None) or\
-            LocalizationResource._get_texts(LocalizationResource.get_default_lang()).get(key, default)
+        texts = LocalizationResource._get_texts(code)
+
+        # 先从指定语言获取，如果不存在
+        result = texts.get(key, None)
+
+        if result is not None:
+            return result
+
+        # 如果有默认值，返回默认值
+        if default is not None:
+            return default
+
+        default_texts = LocalizationResource._get_texts(LocalizationResource.get_default_lang())
+        return default_texts.get(key, None)
 
 
     @classmethod
